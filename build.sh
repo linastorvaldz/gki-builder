@@ -8,13 +8,13 @@ KERNEL_NAME="QuartiX"
 USER="eraselk"
 HOST="gacorprjkt"
 TIMEZONE="Asia/Makassar"
-ANYKERNEL_REPO="https://github.com/namakunegro/anykernel"
-ANYKERNEL_BRANCH="gki"
-KERNEL_REPO="https://github.com/namakunegro/android_kernel_common-6.6"
-KERNEL_BRANCH="android15-6.6-2024-08"
+ANYKERNEL_REPO="https://github.com/linastorvaldz/anykernel"
+ANYKERNEL_BRANCH="android15-6.6"
+KERNEL_REPO="https://github.com/linastorvaldz/kernel_common"
+KERNEL_BRANCH="android15-6.6-lts"
 KERNEL_DEFCONFIG="gki_defconfig"
 GKI_RELEASES_REPO="https://github.com/linastorvaldz/quartix-releases"
-CLANG_URL="https://github.com/linastorvaldz/gki-builder/releases/download/clang-r547379/clang-r547379.tar.gz"
+CLANG_URL="https://github.com/linastorvaldz/idk/releases/download/clang-r510928/clang.tar.gz"
 CLANG_BRANCH=""
 AK3_ZIP_NAME="AK3-$KERNEL_NAME-REL-KVER-VARIANT-BUILD_DATE.zip"
 OUTDIR="$WORKDIR/out"
@@ -149,7 +149,7 @@ if susfs_included; then
   git clone --depth=1 -q https://gitlab.com/simonpunk/susfs4ksu -b $SUSFS_BRANCH $SUSFS_DIR
   cp -R $SUSFS_PATCHES/fs/* ./fs
   cp -R $SUSFS_PATCHES/include/* ./include
-  patch -p1 < $WORKDIR/kernel-patches/50_add_susfs_in_gki-android15-6.6.patch
+  patch -p1 < $SUSFS_PATCHES/50_add_susfs_in_gki-android15-6.6.patch
   SUSFS_VERSION=$(grep -E '^#define SUSFS_VERSION' ./include/linux/susfs.h | cut -d' ' -f3 | sed 's/"//g')
   config --enable CONFIG_KSU_SUSFS
 else
