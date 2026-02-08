@@ -119,7 +119,7 @@ git clone --depth=1 -q \
 export PATH="${CLANG_BIN}:${GAS_DIR}:$PATH"
 
 # Extract clang version
-COMPILER_STRING=$(clang -v 2>&1 | head -n 1 | sed 's/(https..*//' | sed 's/ version//')
+COMPILER_STRING=$(clang --version | head -n 1 | sed 's/(https..*//' | sed 's/ version//')
 
 cd $KSRC
 
