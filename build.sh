@@ -137,12 +137,14 @@ if ksu_included; then
     fi
   done
 
-  install_ksu 'pershoot/KernelSU-Next' 'dev-susfs'
+  install_ksu 'Sorayukii/KernelSU-Next' 'hookless'
   config --enable CONFIG_KSU
+  # For Hookless-KernelSU only
+  config -e CONFIG_KSU_TAMPER_SYSCALL_TABLE
 
-  cd KernelSU-Next
-  patch -p1 < $KERNEL_PATCHES/ksu/ksun-add-more-managers-support.patch
-  cd $OLDPWD
+  #cd KernelSU-Next
+  #patch -p1 < $KERNEL_PATCHES/ksu/ksun-add-more-managers-support.patch
+  #cd $OLDPWD
 fi
 
 # SUSFS
