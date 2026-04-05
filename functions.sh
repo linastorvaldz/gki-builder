@@ -74,7 +74,7 @@ simplify_gh_url() {
 
 # Kernel scripts function
 config() {
-  $KSRC/scripts/config --file $DEFCONFIG_FILE $@
+  "$KSRC/scripts/config" --file "$DEFCONFIG_FILE" "$@"
 }
 
 # Logging function

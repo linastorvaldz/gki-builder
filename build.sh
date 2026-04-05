@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2164
 
 # Constants
 WORKDIR="$(pwd)"
@@ -45,24 +46,24 @@ KSRC="$WORKDIR/ksrc"
 KERNEL_PATCHES="$WORKDIR/kernel-patches"
 
 # Handle error
-exec > >(tee $WORKDIR/build.log) 2>&1
+exec > >(tee "$WORKDIR/build.log") 2>&1
 trap 'error "Failed at line $LINENO [$BASH_COMMAND]"' ERR
 
 # Import functions
-source $WORKDIR/functions.sh
+source "$WORKDIR/functions.sh"
 
 # Set timezone
 sudo timedatectl set-timezone "$TIMEZONE" || export TZ="$TIMEZONE"
 
 # Clone kernel source
 log "Cloning kernel source from $(simplify_gh_url "$KERNEL_REPO")"
-git clone -q --depth=1 $KERNEL_REPO -b $KERNEL_BRANCH $KSRC
+git clone -q --depth=1 "$KERNEL_REPO" -b "$KERNEL_BRANCH" "$KSRC"
 
-cd $KSRC
+cd "$KSRC"
 LINUX_VERSION=$(make kernelversion)
 LINUX_VERSION_CODE=${LINUX_VERSION//./}
 DEFCONFIG_FILE=$(find ./arch/arm64/configs -name "$KERNEL_DEFCONFIG")
-cd $WORKDIR
+cd "$WORKDIR"
 
 # Set Kernel variant
 log "Setting Kernel variant..."
@@ -84,7 +85,7 @@ if [[ -z "$CLANG_BRANCH" ]]; then
       tar -xf clang-archive -C "$CLANG_DIR"
       ;;
     *.7z)
-      7z x clang-archive -o${CLANG_DIR}/ -bd -y > /dev/null
+      7z x clang-archive -o"${CLANG_DIR}/" -bd -y > /dev/null
       ;;
     *)
       error "Unsupported file format"
@@ -95,8 +96,8 @@ if [[ -z "$CLANG_BRANCH" ]]; then
   if [[ $(find "$CLANG_DIR" -mindepth 1 -maxdepth 1 -type d | wc -l) -eq 1 ]] \
     && [[ $(find "$CLANG_DIR" -mindepth 1 -maxdepth 1 -type f | wc -l) -eq 0 ]]; then
     SINGLE_DIR=$(find "$CLANG_DIR" -mindepth 1 -maxdepth 1 -type d)
-    mv $SINGLE_DIR/* $CLANG_DIR/
-    rm -rf $SINGLE_DIR
+    mv "$SINGLE_DIR"/* "$CLANG_DIR"/
+    rm -rf "$SINGLE_DIR"
   fi
 else
   log "🔽 Cloning Clang..."
@@ -116,7 +117,7 @@ export PATH="${CLANG_BIN}:${GAS_DIR}:$PATH"
 # Extract clang version
 COMPILER_STRING=$(clang --version | head -n 1 | sed 's/(https..*//' | sed 's/ version//')
 
-cd $KSRC
+cd "$KSRC"
 
 ## KernelSU setup
 if ksu_included; then
@@ -126,8 +127,8 @@ if ksu_included; then
       log "KernelSU driver found in $KSU_PATH, Removing..."
       KSU_DIR=$(dirname "$KSU_PATH")
 
-      [[ -f "$KSU_DIR/Kconfig" ]] && sed -i '/kernelsu/d' $KSU_DIR/Kconfig
-      [[ -f "$KSU_DIR/Makefile" ]] && sed -i '/kernelsu/d' $KSU_DIR/Makefile
+      [[ -f "$KSU_DIR/Kconfig" ]] && sed -i '/kernelsu/d' "$KSU_DIR/Kconfig"
+      [[ -f "$KSU_DIR/Makefile" ]] && sed -i '/kernelsu/d' "$KSU_DIR/Makefile"
 
       rm -rf $KSU_PATH
     fi
@@ -137,8 +138,8 @@ if ksu_included; then
   config --enable CONFIG_KSU
 
   cd KernelSU-Next
-  patch -p1 < $KERNEL_PATCHES/ksu/ksun-add-more-managers-support.patch
-  cd $OLDPWD
+  patch -p1 < "$KERNEL_PATCHES/ksu/ksun-add-more-managers-support.patch"
+  cd "$OLDPWD"
 fi
 
 # SUSFS
@@ -154,22 +155,22 @@ if susfs_included; then
   elif [[ "$KVER" == "5.10" ]]; then
     SUSFS_BRANCH=gki-android12-5.10
   fi
-  git clone --depth=1 -q https://gitlab.com/simonpunk/susfs4ksu -b $SUSFS_BRANCH $SUSFS_DIR
-  cp -R $SUSFS_PATCHES/fs/* ./fs
-  cp -R $SUSFS_PATCHES/include/* ./include
-  patch -p1 < $SUSFS_PATCHES/50_add_susfs_in_${SUSFS_BRANCH}.patch || true
+  git clone --depth=1 -q https://gitlab.com/simonpunk/susfs4ksu -b "$SUSFS_BRANCH" "$SUSFS_DIR"
+  cp -R "$SUSFS_PATCHES"/fs/* ./fs
+  cp -R "$SUSFS_PATCHES"/include/* ./include
+  patch -p1 < "$SUSFS_PATCHES/50_add_susfs_in_${SUSFS_BRANCH}.patch" || true
   if [[ $(echo "$LINUX_VERSION_CODE" | head -c4) -eq 6630 ]]; then
-    patch -p1 < $KERNEL_PATCHES/susfs/namespace.c_fix.patch
-    patch -p1 < $KERNEL_PATCHES/susfs/task_mmu.c_fix.patch
+    patch -p1 < "$KERNEL_PATCHES/susfs/namespace.c_fix.patch"
+    patch -p1 < "$KERNEL_PATCHES/susfs/task_mmu.c_fix.patch"
   elif [[ $(echo "$LINUX_VERSION_CODE" | head -c4) -eq 6658 ]]; then
-    patch -p1 < $KERNEL_PATCHES/susfs/task_mmu.c_fix-k6.6.58.patch
+    patch -p1 < "$KERNEL_PATCHES/susfs/task_mmu.c_fix-k6.6.58.patch"
   elif [[ $(echo "$LINUX_VERSION_CODE" | head -c2) -eq 61 ]]; then
-    patch -p1 < $KERNEL_PATCHES/susfs/fs_proc_base.c-fix-k6.1.patch
+    patch -p1 < "$KERNEL_PATCHES/susfs/fs_proc_base.c-fix-k6.1.patch"
   elif [[ $(echo "$LINUX_VERSION_CODE" | head -c3) -eq 510 ]]; then
-    patch -p1 < $KERNEL_PATCHES/susfs/pershoot-susfs-k5.10.patch
+    patch -p1 < "$KERNEL_PATCHES/susfs/pershoot-susfs-k5.10.patch"
   fi
   if [[ $(echo "$LINUX_VERSION_CODE" | head -c1) -eq 6 ]]; then
-    patch -p1 < $KERNEL_PATCHES/susfs/fix-statfs-crc-mismatch-susfs.patch
+    patch -p1 < "$KERNEL_PATCHES/susfs/fix-statfs-crc-mismatch-susfs.patch"
   fi
   SUSFS_VERSION=$(grep -E '^#define SUSFS_VERSION' ./include/linux/susfs.h | cut -d' ' -f3 | sed 's/"//g')
   config --enable CONFIG_KSU_SUSFS
@@ -181,7 +182,7 @@ fi
 if [[ $TODO == "kernel" ]]; then
   if [[ $STATUS == "BETA" ]]; then
     LAST_COMMIT=$(git rev-parse HEAD)
-    SUFFIX=$(git rev-parse --short $LAST_COMMIT)
+    SUFFIX=$(git rev-parse --short "$LAST_COMMIT")
   else
     SUFFIX="$RELEASE"
   fi
@@ -193,7 +194,8 @@ fi
 # Declare needed variables
 export KBUILD_BUILD_USER="$USER"
 export KBUILD_BUILD_HOST="$HOST"
-export KBUILD_BUILD_TIMESTAMP=$(date)
+KBUILD_BUILD_TIMESTAMP=$(date)
+export KBUILD_BUILD_TIMESTAMP
 export KCFLAGS="-w"
 MAKE_ARGS=(
   LLVM=1
@@ -201,8 +203,8 @@ MAKE_ARGS=(
   ARCH=arm64
   CROSS_COMPILE=aarch64-linux-gnu-
   CROSS_COMPILE_COMPAT=arm-linux-gnueabi-
-  -j$(nproc --all)
-  O=$OUTDIR
+  "-j$(nproc --all)"
+  "O=$OUTDIR"
 )
 
 KERNEL_IMAGE="$OUTDIR/arch/arm64/boot/Image"
@@ -226,30 +228,30 @@ EOF
 
 ## Build GKI
 log "Generating config..."
-make ${MAKE_ARGS[@]} $KERNEL_DEFCONFIG
+make "${MAKE_ARGS[@]}" "$KERNEL_DEFCONFIG"
 
 if [[ "$DEFCONFIG_TO_MERGE" ]]; then
   log "Merging configs..."
   if [[ -f "scripts/kconfig/merge_config.sh" ]]; then
     for config in $DEFCONFIG_TO_MERGE; do
-      make ${MAKE_ARGS[@]} scripts/kconfig/merge_config.sh $config
+      make "${MAKE_ARGS[@]}" scripts/kconfig/merge_config.sh "$config"
     done
   else
     error "scripts/kconfig/merge_config.sh does not exist in the kernel source"
   fi
-  make ${MAKE_ARGS[@]} olddefconfig
+  make "${MAKE_ARGS[@]}" olddefconfig
 fi
 
 # Upload defconfig if we are doing defconfig
 if [[ $TODO == "defconfig" ]]; then
   log "Uploading defconfig..."
-  upload_file $OUTDIR/.config
+  upload_file "$OUTDIR/.config"
   exit 0
 fi
 
 # Build the actual kernel
 log "Building kernel..."
-make ${MAKE_ARGS[@]}
+make "${MAKE_ARGS[@]}"
 
 # Check KMI Function symbol
 if [[ $(echo "$LINUX_VERSION_CODE" | head -c1) -eq 6 ]]; then
@@ -259,7 +261,7 @@ else
 fi
 
 ## Post-compiling stuff
-cd $WORKDIR
+cd "$WORKDIR"
 
 # Clone AnyKernel
 log "Cloning anykernel from $(simplify_gh_url "$ANYKERNEL_REPO")"
@@ -272,34 +274,34 @@ if [[ $STATUS == "BETA" ]]; then
   AK3_ZIP_NAME=${AK3_ZIP_NAME//-REL/}
   sed -i \
     "s/kernel.string=.*/kernel.string=${KERNEL_NAME} ${LINUX_VERSION} (${BUILD_DATE}) ${VARIANT}/g" \
-    $WORKDIR/anykernel/anykernel.sh
+    "$WORKDIR/anykernel/anykernel.sh"
 else
   AK3_ZIP_NAME=${AK3_ZIP_NAME//-BUILD_DATE/}
   AK3_ZIP_NAME=${AK3_ZIP_NAME//REL/$RELEASE}
   sed -i \
     "s/kernel.string=.*/kernel.string=${KERNEL_NAME} ${RELEASE} ${LINUX_VERSION} ${VARIANT}/g" \
-    $WORKDIR/anykernel/anykernel.sh
+    "$WORKDIR/anykernel/anykernel.sh"
 fi
 
 # Set supported kernel version in anykernel
-sed -i "s/supported_kver=.*/supported_kver='$KVER'/g" $WORKDIR/anykernel/anykernel.sh
+sed -i "s/supported_kver=.*/supported_kver='$KVER'/g" "$WORKDIR/anykernel/anykernel.sh"
 
 # Copy banner to anykernel if available
 if [ -f "$WORKDIR/banner" ]; then
-  cp $WORKDIR/banner $WORKDIR/anykernel/banner
+  cp "$WORKDIR/banner" "$WORKDIR/anykernel/banner"
 fi
 
 # Zip the anykernel
 cd anykernel
 log "Zipping anykernel..."
-cp $KERNEL_IMAGE .
-zip -r9 $WORKDIR/$AK3_ZIP_NAME ./*
-cd $OLDPWD
+cp "$KERNEL_IMAGE" .
+zip -r9 "$WORKDIR/$AK3_ZIP_NAME" ./*
+cd "$OLDPWD"
 
 if [[ $STATUS != "BETA" ]]; then
-  echo "BASE_NAME=$KERNEL_NAME-$VARIANT" >> $GITHUB_ENV
-  mkdir -p $WORKDIR/artifacts
-  mv $WORKDIR/*.zip $WORKDIR/artifacts
+  echo "BASE_NAME=$KERNEL_NAME-$VARIANT" >> "$GITHUB_ENV"
+  mkdir -p "$WORKDIR/artifacts"
+  mv "$WORKDIR"/*.zip "$WORKDIR/artifacts"
 fi
 
 if [[ $LAST_BUILD == "true" ]] && [[ $STATUS != "BETA" ]]; then
@@ -308,7 +310,7 @@ if [[ $LAST_BUILD == "true" ]] && [[ $STATUS != "BETA" ]]; then
     echo "SUSFS_VERSION=$(curl -s https://gitlab.com/simonpunk/susfs4ksu/raw/gki-android15-6.6/kernel_patches/include/linux/susfs.h | grep -E '^#define SUSFS_VERSION' | cut -d' ' -f3 | sed 's/"//g')"
     echo "KERNEL_NAME=$KERNEL_NAME"
     echo "RELEASE_REPO=$(simplify_gh_url "$GKI_RELEASES_REPO")"
-  ) >> $WORKDIR/artifacts/info.txt
+  ) >> "$WORKDIR/artifacts/info.txt"
 fi
 
 if [[ $STATUS == "BETA" ]]; then
