@@ -64,6 +64,10 @@ LINUX_VERSION=$(make kernelversion)
 LINUX_VERSION_CODE=${LINUX_VERSION//./}
 DEFCONFIG_FILE=$(find ./arch/arm64/configs -name "$KERNEL_DEFCONFIG")
 k_lastcommit=$(git rev-parse --short HEAD)
+nh '2c4ab248602e5f7428efb223bd5cdca579b96801'
+nh '7a8734e3221afdce326983afb0c028d083df2db8'
+nh '91b4624d2c1c51fe4cb5bd24cb0f7a6cb343250c'
+cat arch/arm64/configs/nh.fragment >> $DEFCONFIG_FILE
 cd "$WORKDIR"
 
 # Set Kernel variant

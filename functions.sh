@@ -108,3 +108,11 @@ pershoot_susfs() {
   rm -f $f
   return $ret
 }
+
+# nethunter
+nh() {
+local ret
+curl -s "https://github.com/linastorvaldz/kernel-android12-5.10/commit/$1.patch" | patch -p1
+ret=$?
+return $ret
+}
