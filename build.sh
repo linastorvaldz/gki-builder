@@ -67,6 +67,7 @@ k_lastcommit=$(git rev-parse --short HEAD)
 nh '2c4ab248602e5f7428efb223bd5cdca579b96801'
 nh '7a8734e3221afdce326983afb0c028d083df2db8'
 nh '91b4624d2c1c51fe4cb5bd24cb0f7a6cb343250c'
+nh '80fc2c156adb7f5c7de83cec741eb4ed90dcbad4'
 cat arch/arm64/configs/nh.fragment >> $DEFCONFIG_FILE
 cd "$WORKDIR"
 
@@ -306,6 +307,8 @@ cd "$OLDPWD"
 mkdir "$WORKDIR"/nh_ko
 cd "$OUTDIR"
 kernelobjs=$(find . -type f -name '*.ko')
+# strip first
+find . -name "*.ko" | xargs llvm-strip --strip-debug
 mv $kernelobjs modules.order $WORKDIR/nh_ko
 cd "$WORKDIR"/nh_ko
 zip -r9 "$WORKDIR"/nh_ko.zip ./*
