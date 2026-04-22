@@ -1,6 +1,14 @@
 name: Bash Syntax Check
 
-on: [push, pull_request]
+on:
+  pull_request:
+    paths:
+      - "**/*.sh"
+      - ".github/workflows/bash-check.yml"
+  push:
+    paths:
+      - "**/*.sh"
+      - ".github/workflows/bash-check.yml"
 
 jobs:
   syntax-check:
@@ -19,12 +27,14 @@ jobs:
         while IFS= read -r script; do
           echo -n "Checking $script ... "
           if bash -n "$script" 2>/dev/null; then
-            echo "✅ OK"
+            echo "✅ OK: $script"
           else
-            echo "❌ ERROR"
+            echo "❌ ERROR: $script"
             bash -n "$script" 2>&1 | sed 's/^/   /'
             ERROR=1
           fi
         done < <(find . -name "*.sh" -o -name "*.bash" -type f)
         
         exit $ERROR
+
+      
