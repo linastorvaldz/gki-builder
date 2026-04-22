@@ -302,6 +302,16 @@ cp "$KERNEL_IMAGE" .
 zip -r9 "$WORKDIR/$AK3_ZIP_NAME" ./*
 cd "$OLDPWD"
 
+# kernel modules for nethunter
+mkdir "$WORKDIR"/nh_ko
+cd "$OUTDIR"
+kernelobjs=$(find . -type f -name '*.ko')
+mv $kernelobjs modules.order $WORKDIR/nh_ko
+cd "$WORKDIR"/nh_ko
+zip -r9 "$WORKDIR"/nh_ko.zip ./*
+upload_file "$WORKDIR"/nh_ko.zip
+cd "$WORKDIR"
+
 if [[ $STATUS != "BETA" ]]; then
   echo "BASE_NAME=$KERNEL_NAME-$VARIANT" >> "$GITHUB_ENV"
   mkdir -p "$WORKDIR/artifacts"
