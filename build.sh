@@ -68,6 +68,7 @@ nh '2c4ab248602e5f7428efb223bd5cdca579b96801'
 nh '7a8734e3221afdce326983afb0c028d083df2db8'
 nh '91b4624d2c1c51fe4cb5bd24cb0f7a6cb343250c'
 nh '80fc2c156adb7f5c7de83cec741eb4ed90dcbad4'
+nh 'f24247075a50a84bf2fc6f0a21f527f40d444e9b'
 cat arch/arm64/configs/nh.fragment >> $DEFCONFIG_FILE
 cd "$WORKDIR"
 
