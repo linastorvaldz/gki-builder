@@ -1,6 +1,16 @@
 name: Bash Syntax Check
 
-on: [push, pull_request]
+on:
+  pull_request:
+    paths:
+      - "**/*.sh"
+      - "**/*.bash"
+      - ".github/workflows/bash-check.yml"
+  push:
+    paths:
+      - "**/*.sh"
+      - "**/.bash"
+      - ".github/workflows/bash-check.yml"
 
 jobs:
   syntax-check:
@@ -11,6 +21,7 @@ jobs:
       uses: actions/checkout@v4
     
     - name: Find and check bash scripts
+      shell: bash
       run: |
         echo "🔍 Checking bash scripts for syntax errors..."
         ERROR=0
@@ -25,6 +36,8 @@ jobs:
             bash -n "$script" 2>&1 | sed 's/^/   /'
             ERROR=1
           fi
-        done < <(find . -name "*.sh" -o -name "*.bash" -type f)
+        done < <(find . -type f \( -name "*.sh" -o -name "*.bash" \))
         
         exit $ERROR
+
+      
