@@ -171,8 +171,8 @@ if susfs_included; then
   if [[ $(echo "$LINUX_VERSION_CODE" | head -c1) -eq 6 ]]; then
     patch -p1 < "$KERNEL_PATCHES/susfs/fix-statfs-crc-mismatch-susfs.patch"
   fi
-  pershoot_susfs '3a288f01c379be4454ecaa0cb5d2d2494ba719e6'
-  pershoot_susfs '98b3fc2b178ec638d968966771fbf82b5cbb72b1'
+  pershoot_susfs 'c55d9c4edd9c49b76210ce10c2a8026415bffd93'
+  pershoot_susfs '2cdd69d819034ba3e4ba3484af5e34ea4f81c2b8'
   SUSFS_VERSION=$(grep -E '^#define SUSFS_VERSION' ./include/linux/susfs.h | cut -d' ' -f3 | sed 's/"//g')
   config --enable CONFIG_KSU_SUSFS
 else
