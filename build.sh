@@ -293,7 +293,6 @@ if [ -d "$OUTDIR/drivers/net/wireless/realtek/rtw88" ]; then
   done
 
   find $OUTDIR/drivers/net/wireless/realtek/rtw88 -name "*.ko" -exec cp {} $wmod/lkm/ \;
-  find $OUTDIR/drivers/staging/r8188eu -name "*.ko" -exec cp {} $wmod/lkm/ \;
 
   cp $KSRC/drivers/net/wireless/realtek/rtw88/firmware/* "$wmod/system/etc/firmware/rtw88"
   ls -la $wmod/lkm/
