@@ -28,7 +28,7 @@ fi
 CONFIG_TO_MERGE="nh.config"
 GKI_RELEASES_REPO="https://github.com/linastorvaldz/OtagKernel-releases"
 #CLANG_URL="https://github.com/linastorvaldz/idk/releases/download/clang-r547379/clang.tgz"
-CLANG_URL="https://github.com/LineageOS/android_prebuilts_clang_kernel_linux-x86_clang-r416183b/archive/refs/heads/lineage-20.0.tar.gz"
+CLANG_URL="https://github.com/linastorvaldz/gki-builder/releases/download/clang-r536225/clang-r536225.tar.gz"
 CLANG_BRANCH="" # if it's a github repo
 AK3_ZIP_NAME="$KERNEL_NAME-REL-KVER-VARIANT-BUILD_DATE.zip"
 OUTDIR="$WORKDIR/out"
