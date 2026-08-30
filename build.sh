@@ -6,40 +6,30 @@ WORKDIR="$(pwd)"
 if [[ "$KVER" == "6.6" ]]; then
   RELEASE="v0.3"
 elif [[ "$KVER" == "5.10" ]]; then
-  RELEASE="v0.6"
-elif [[ "$KVER" == "6.1" ]]; then
-  RELEASE="v0.1"
+  RELEASE="v0.7"
 fi
 
 KERNEL_NAME="OtagKernel"
-USER="eraselk"
+USER="linastorvaldz"
 HOST="gacorprjkt"
 TIMEZONE="Asia/Makassar"
 ANYKERNEL_REPO="https://github.com/linastorvaldz/AnyKernel3"
 ANYKERNEL_BRANCH="master"
-
-if [[ "$KVER" == "5.10" ]]; then
-  KERNEL_DEFCONFIG="otag_defconfig"
-else
-  KERNEL_DEFCONFIG="quartix_defconfig"
-fi
+KERNEL_DEFCONFIG="gki_defconfig"
 
 if [[ "$KVER" == "6.6" ]]; then
   KERNEL_REPO="https://github.com/linastorvaldz/kernel-android15-6.6"
   KERNEL_BRANCH="android15-6.6-lts"
-elif [[ "$KVER" == "6.1" ]]; then
-  KERNEL_REPO="https://github.com/linastorvaldz/kernel-android14-6.1"
-  KERNEL_BRANCH="android14-6.1-lts"
 elif [[ "$KVER" == "5.10" ]]; then
-  KERNEL_REPO="https://github.com/linastorvaldz/kernel-android12-5.10"
-  KERNEL_BRANCH="rebase"
+  KERNEL_REPO="https://github.com/linastorvaldz/a12-5.10-new"
+  KERNEL_BRANCH="android12-5.10"
 fi
 
-DEFCONFIG_TO_MERGE=""
+CONFIG_TO_MERGE="nh.config"
 GKI_RELEASES_REPO="https://github.com/linastorvaldz/OtagKernel-releases"
 #CLANG_URL="https://github.com/linastorvaldz/idk/releases/download/clang-r547379/clang.tgz"
 CLANG_URL="https://github.com/LineageOS/android_prebuilts_clang_kernel_linux-x86_clang-r416183b/archive/refs/heads/lineage-20.0.tar.gz"
-CLANG_BRANCH=""
+CLANG_BRANCH="" # if it's a github repo
 AK3_ZIP_NAME="$KERNEL_NAME-REL-KVER-VARIANT-BUILD_DATE.zip"
 OUTDIR="$WORKDIR/out"
 KSRC="$WORKDIR/ksrc"
@@ -151,8 +141,6 @@ if susfs_included; then
   SUSFS_PATCHES="${SUSFS_DIR}/kernel_patches"
   if [[ "$KVER" == "6.6" ]]; then
     SUSFS_BRANCH=gki-android15-6.6
-  elif [[ "$KVER" == "6.1" ]]; then
-    SUSFS_BRANCH=gki-android14-6.1
   elif [[ "$KVER" == "5.10" ]]; then
     SUSFS_BRANCH=gki-android12-5.10
   fi
@@ -217,30 +205,27 @@ fi
 
 text=$(
   cat << EOF
-*Kernel Version*: \`${LINUX_VERSION}\`
-*Build Date*: \`${KBUILD_BUILD_TIMESTAMP}\`
-*Variant*: \`${VARIANT}\`
-*SuSFS*: \`$(susfs_included && echo "${SUSFS_VERSION}" || echo "None")\`
-*Compiler*: \`${COMPILER_STRING}\`
-*Kernol commit*: [${k_lastcommit}](${KERNEL_REPO}/commit/${k_lastcommit})
+Kernel version: \`${LINUX_VERSION}\`
+Build Date: \`${KBUILD_BUILD_TIMESTAMP}\`
+Variant: \`${VARIANT}\`
+SuSFS: \`$(susfs_included && echo "${SUSFS_VERSION}" || echo "None")\`
+Compiler: \`${COMPILER_STRING}\`
+Last Commit: [${k_lastcommit}](${KERNEL_REPO}/commit/${k_lastcommit})
 EOF
 )
 
-## Build GKI
-log "Generating config..."
-make "${MAKE_ARGS[@]}" "$KERNEL_DEFCONFIG"
-
+## Build
 if [[ "$DEFCONFIG_TO_MERGE" ]]; then
   log "Merging configs..."
-  if [[ -f "scripts/kconfig/merge_config.sh" ]]; then
-    for config in $DEFCONFIG_TO_MERGE; do
-      make "${MAKE_ARGS[@]}" scripts/kconfig/merge_config.sh "$config"
-    done
-  else
-    error "scripts/kconfig/merge_config.sh does not exist in the kernel source"
-  fi
-  make "${MAKE_ARGS[@]}" olddefconfig
+  for config in $CONFIG_TO_MERGE; do
+    if [ -f "$WORKDIR/configs/$config" ]; then
+      cat $WORKDIR/configs/$config >> $DEFCONFIG_FILE
+    fi
+  done
 fi
+
+log "Generating .config..."
+make "${MAKE_ARGS[@]}" "$KERNEL_DEFCONFIG"
 
 # Upload defconfig if we are doing defconfig
 if [[ $TODO == "defconfig" ]]; then
@@ -267,6 +252,8 @@ cd "$WORKDIR"
 log "Cloning anykernel from $(simplify_gh_url "$ANYKERNEL_REPO")"
 git clone -q --depth=1 $ANYKERNEL_REPO -b $ANYKERNEL_BRANCH anykernel
 
+cd anykernel
+
 # Set kernel string in anykernel
 if [[ $STATUS == "BETA" ]]; then
   BUILD_DATE=$(date -d "$KBUILD_BUILD_TIMESTAMP" +"%Y%m%d-%H%M")
@@ -274,29 +261,48 @@ if [[ $STATUS == "BETA" ]]; then
   AK3_ZIP_NAME=${AK3_ZIP_NAME//-REL/}
   sed -i \
     "s/kernel.string=.*/kernel.string=${KERNEL_NAME} ${LINUX_VERSION} (${BUILD_DATE}) ${VARIANT}/g" \
-    "$WORKDIR/anykernel/anykernel.sh"
+    anykernel.sh
 else
   AK3_ZIP_NAME=${AK3_ZIP_NAME//-BUILD_DATE/}
   AK3_ZIP_NAME=${AK3_ZIP_NAME//REL/$RELEASE}
   sed -i \
     "s/kernel.string=.*/kernel.string=${KERNEL_NAME} ${RELEASE} ${LINUX_VERSION} ${VARIANT}/g" \
-    "$WORKDIR/anykernel/anykernel.sh"
+    anykernel.sh
 fi
 
 # Set supported kernel version in anykernel
-sed -i "s/supported_kver=.*/supported_kver='$KVER'/g" "$WORKDIR/anykernel/anykernel.sh"
-
-# Copy banner to anykernel if available
-if [ -f "$WORKDIR/banner" ]; then
-  cp "$WORKDIR/banner" "$WORKDIR/anykernel/banner"
-fi
+sed -i "s/supported_kver=.*/supported_kver='$KVER'/g" anykernel.sh
 
 # Zip the anykernel
-cd anykernel
 log "Zipping anykernel..."
 cp "$KERNEL_IMAGE" .
 zip -r9 "$WORKDIR/$AK3_ZIP_NAME" ./*
 cd "$OLDPWD"
+
+# realtek wireless modules
+log "Extracting wireless modules..."
+wmod="$WORKDIR/modules/wireless_modules"
+wmod_zipn="WirelessModules.zip"
+mkdir -p "$wmod/lkm"
+mkdir -p "$wmod/system/etc/firmware/rtw88"
+
+cd "$wmod"
+
+if [ -d "$OUTDIR/drivers/net/wireless/realtek/rtw88" ]; then
+  for mod in rfkill cfg80211 mac80211; do
+    find $OUTDIR/ -iname "$mod*.ko" -exec cp {} $wmod/lkm/ \; 2> /dev/null || true
+  done
+
+  find $OUTDIR/drivers/net/wireless/realtek/rtw88 -name "*.ko" -exec cp {} $wmod/lkm/ \;
+  find $OUTDIR/drivers/staging/r8188eu -name "*.ko" -exec cp {} $wmod/lkm/ \;
+
+  cp $KSRC/drivers/net/wireless/realtek/rtw88/firmware/* "$wmod/system/etc/firmware/rtw88"
+  ls -la $wmod/lkm/
+  ls -la $wmod/system/etc/firmware/rtw88
+  zip -r9 "$WORKDIR/$wmod_zipn" ./*
+fi
+
+cd "$WORKDIR"
 
 if [[ $STATUS != "BETA" ]]; then
   echo "BASE_NAME=$KERNEL_NAME-$VARIANT" >> "$GITHUB_ENV"
@@ -317,6 +323,7 @@ fi
 
 if [[ $STATUS == "BETA" ]]; then
   upload_file "$WORKDIR/$AK3_ZIP_NAME" "$text"
+  upload_file "$WORKDIR/$wmod_zipn" "Realtek Wireless Modules for Nethunter."
   upload_file "$WORKDIR/build.log"
 else
   send_msg "✅ Build Succeeded for $VARIANT variant."
