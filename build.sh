@@ -47,7 +47,7 @@ sudo timedatectl set-timezone "$TIMEZONE" || export TZ="$TIMEZONE"
 
 # Clone kernel source
 log "Cloning kernel source from $(simplify_gh_url "$KERNEL_REPO")"
-git clone -q --depth=1 "$KERNEL_REPO" -b "$KERNEL_BRANCH" "$KSRC"
+git clone -q --depth=1 --recurse-submodules "$KERNEL_REPO" -b "$KERNEL_BRANCH" "$KSRC"
 
 cd "$KSRC"
 LINUX_VERSION=$(make kernelversion)
@@ -210,7 +210,7 @@ Build Date: \`${KBUILD_BUILD_TIMESTAMP}\`
 Variant: \`${VARIANT}\`
 SuSFS: \`$(susfs_included && echo "${SUSFS_VERSION}" || echo "None")\`
 Compiler: \`${COMPILER_STRING}\`
-Last Commit: [${k_lastcommit}](${KERNEL_REPO}/commit/${k_lastcommit})
+Last Commit: [$(simplify_gh_url "$KERNEL_REPO")@${k_lastcommit}](${KERNEL_REPO}/commit/${k_lastcommit})
 EOF
 )
 
