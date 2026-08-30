@@ -214,8 +214,8 @@ Last Commit: [$(simplify_gh_url "$KERNEL_REPO")@${k_lastcommit}](${KERNEL_REPO}/
 EOF
 )
 
-## Build
-if [[ "$DEFCONFIG_TO_MERGE" ]]; then
+# Merge config
+if [[ "$CONFIG_TO_MERGE" ]]; then
   log "Merging configs..."
   for config in $CONFIG_TO_MERGE; do
     if [ -f "$WORKDIR/configs/$config" ]; then
@@ -245,7 +245,6 @@ else
   $KMI_CHECK "$KSRC/android/abi_gki_aarch64.xml" "$MODULE_SYMVERS" || true
 fi
 
-## Post-compiling stuff
 cd "$WORKDIR"
 
 # Clone AnyKernel
