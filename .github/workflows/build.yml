@@ -35,7 +35,6 @@ on:
         type: choice
         options:
           - "6.6"
-          - "6.1"
           - "5.10"
 
 env:

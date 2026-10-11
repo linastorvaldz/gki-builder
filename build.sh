@@ -3,6 +3,32 @@
 
 # Constants
 WORKDIR="$(pwd)"
+
+# Validate workflow inputs before using them to select repositories and config.
+case "$KVER" in
+  6.6|5.10) ;;
+  *)
+    echo "[ERROR] Unsupported KVER '${KVER:-<empty>}'; supported versions are 6.6 and 5.10."
+    exit 2
+    ;;
+esac
+
+case "$VARIANT" in
+  VNL|KSU|KSUS) ;;
+  *)
+    echo "[ERROR] Unsupported VARIANT '${VARIANT:-<empty>}'; choose VNL, KSU, or KSUS."
+    exit 2
+    ;;
+esac
+
+case "$TODO" in
+  kernel|defconfig) ;;
+  *)
+    echo "[ERROR] Unsupported TODO '${TODO:-<empty>}'; choose kernel or defconfig."
+    exit 2
+    ;;
+esac
+
 if [[ "$KVER" == "6.6" ]]; then
   RELEASE="v0.3"
 elif [[ "$KVER" == "5.10" ]]; then
